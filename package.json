@@ -10,6 +10,8 @@
   },
   "packageManager": "pnpm@10.10.0",
   "dependencies": {
+    "@clerk/clerk-react": "^5.31.1",
+    "@clerk/nextjs": "^6.19.1",
     "@t3-oss/env-nextjs": "^0.13.4",
     "convex": "^1.24.1",
     "next": "15.3.2",

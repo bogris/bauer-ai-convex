@@ -1,19 +1,23 @@
 import { createEnv } from "@t3-oss/env-nextjs";
-// import { z } from "zod";
+import { z } from "zod";
  
 export const env = createEnv({
   server: {
-    // DATABASE_URL: z.string().url(),
-    // OPEN_AI_API_KEY: z.string().min(1),
+    CLERK_SECRET_KEY: z.string(),
+    CONVEX_DEPLOYMENT: z.string(),
   },
   client: {
-    // NEXT_PUBLIC_PUBLISHABLE_KEY: z.string().min(1),
+    NEXT_PUBLIC_CONVEX_URL: z.string().min(1),
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
+    NEXT_PUBLIC_CLERK_FRONTEND_API_URL: z.string().min(1),
   },
   // If you're using Next.js < 13.4.4, you'll need to specify the runtimeEnv manually
   runtimeEnv: {
-    // DATABASE_URL: process.env.DATABASE_URL,
-    // OPEN_AI_API_KEY: process.env.OPEN_AI_API_KEY,
-    // NEXT_PUBLIC_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_PUBLISHABLE_KEY,
+    CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
+    CONVEX_DEPLOYMENT: process.env.CONVEX_DEPLOYMENT,
+    NEXT_PUBLIC_CONVEX_URL: process.env.NEXT_PUBLIC_CONVEX_URL,
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+    NEXT_PUBLIC_CLERK_FRONTEND_API_URL: process.env.NEXT_PUBLIC_CLERK_FRONTEND_API_URL,
   },
   // For Next.js >= 13.4.4, you only need to destructure client variables:
   // experimental__runtimeEnv: {
