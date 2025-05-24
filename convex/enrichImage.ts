@@ -11,8 +11,8 @@ import { NoOp } from "convex-helpers/server/customFunctions";
 
 const zArgs = {
   imageUrl: z.string(),
-  context: z.string(),
-  articleTitle: z.string(),
+  context: z.string().optional(),
+  articleTitle: z.string().optional(),
 };
 
 const responseSchema = z.object({
@@ -46,7 +46,7 @@ export const analyzeImageWithContext = zCustomAction(
 
     const userMessage = `Please analyze this image from a technical documentation article${args.articleTitle ? ` titled \"${args.articleTitle}\"` : ""}${args.context ? `\n\nContext: ${args.context}` : ""}.
 
-Provide a concise technical description focusing on installation and operational aspects. if there is not a lot say about it say wahat you can`;
+Provide a concise technical description of the image. Don't make assumptions about things that are not in the image if there is not a lot say about it say wahat you can`;
 
     // Use generateObject for structured output
     const { object } = await generateObject({

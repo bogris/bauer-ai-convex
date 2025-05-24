@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 import { categories } from "./out/categories";
 import fs from "fs";
 import path from "path";
+import { ArticleResult } from "../../schemas/article-export";
 
 dotenv.config({
   path: ".env.local",
@@ -26,18 +27,6 @@ async function scrapeBooks() {
   const page = await browser.newPage();
 
   try {
-    type ArticleResult = {
-      title?: string;
-      url: string;
-      blocks: (
-        | { type: "header"; level: string; text: string }
-        | { type: "text"; text: string }
-        | { type: "image"; src: string; alt: string; encoding: "url" }
-        | { type: "list"; ordered: boolean; items: string[] }
-        | { type: "code"; code: string }
-      )[];
-      categoryId?: string;
-    };
     const results: ArticleResult[] = [];
     // let count = 0;
     let successCount = 0;

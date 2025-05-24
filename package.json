@@ -21,6 +21,7 @@
     "@browserbasehq/stagehand": "^2.2.1",
     "@clerk/clerk-react": "^5.31.1",
     "@clerk/nextjs": "^6.19.1",
+    "@radix-ui/themes": "^3.2.1",
     "@t3-oss/env-nextjs": "^0.13.4",
     "@types/aws-lambda": "^8.10.149",
     "ai": "^4.3.16",
