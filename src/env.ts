@@ -5,6 +5,8 @@ export const env = createEnv({
   server: {
     CLERK_SECRET_KEY: z.string(),
     CONVEX_DEPLOYMENT: z.string(),
+    // BROWSERBASE_API_KEY: z.string(),
+    // BROWSERBASE_PROJECT_ID: z.string(),
   },
   client: {
     NEXT_PUBLIC_CONVEX_URL: z.string().min(1),
@@ -16,8 +18,12 @@ export const env = createEnv({
     CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
     CONVEX_DEPLOYMENT: process.env.CONVEX_DEPLOYMENT,
     NEXT_PUBLIC_CONVEX_URL: process.env.NEXT_PUBLIC_CONVEX_URL,
-    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
-    NEXT_PUBLIC_CLERK_FRONTEND_API_URL: process.env.NEXT_PUBLIC_CLERK_FRONTEND_API_URL,
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:
+      process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+    NEXT_PUBLIC_CLERK_FRONTEND_API_URL:
+      process.env.NEXT_PUBLIC_CLERK_FRONTEND_API_URL,
+    // BROWSERBASE_API_KEY: process.env.BROWSERBASE_API_KEY,
+    // BROWSERBASE_PROJECT_ID: process.env.BROWSERBASE_PROJECT_ID,
   },
   // For Next.js >= 13.4.4, you only need to destructure client variables:
   // experimental__runtimeEnv: {

@@ -2,24 +2,45 @@
   "name": "bauer-ai-convex",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "sandbox": "export AWS_APP_ID=awsamplifygen2 && export AWS_BRANCH=$(whoami)-sandbox && npx ampx sandbox --stream-function-logs --profile=ba",
+    "awslogin": "aws sso login --profile=ba",
+    "get-categories": "tsx scripts/scraping/get-categories_pw.ts",
+    "get-articles": "tsx scripts/scraping/get-articles_pw_bb.ts"
   },
   "packageManager": "pnpm@10.10.0",
   "dependencies": {
+    "@ai-sdk/openai": "^1.3.22",
+    "@aws-sdk/client-lambda": "^3.817.0",
+    "@browserbasehq/sdk": "^2.6.0",
+    "@browserbasehq/stagehand": "^2.2.1",
     "@clerk/clerk-react": "^5.31.1",
     "@clerk/nextjs": "^6.19.1",
     "@t3-oss/env-nextjs": "^0.13.4",
+    "@types/aws-lambda": "^8.10.149",
+    "ai": "^4.3.16",
+    "aws-cdk-lib": "^2.198.0",
     "convex": "^1.24.1",
+    "convex-helpers": "^0.1.89",
+    "dotenv": "^16.5.0",
     "next": "15.3.2",
+    "playwright": "^1.52.0",
+    "playwright-aws-lambda": "^0.11.0",
+    "playwright-core": "^1.52.0",
+    "playwright-extra": "^4.3.6",
+    "playwright-extra-plugin-stealth": "^0.0.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "zod": "^3.24.4"
   },
   "devDependencies": {
+    "@aws-amplify/backend": "^1.16.1",
+    "@aws-amplify/backend-cli": "^1.7.2",
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
@@ -27,7 +48,9 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.3.2",
+    "prettier": "^3.5.3",
     "tailwindcss": "^4",
+    "tsx": "^4.19.4",
     "typescript": "^5"
   }
 }
