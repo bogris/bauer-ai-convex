@@ -5,6 +5,7 @@ import { action, mutation, query } from "./_generated/server";
 import { api } from "./_generated/api";
 import { DataModel, Id } from "./_generated/dataModel";
 
+
 export const getImageBlockContext = query({
   args: {
     blockId: v.id("blocks"),
@@ -66,7 +67,7 @@ export const addAiSummary = mutation({
   },
 });
 
-const blocksNoEmbeddingValidator = v.object({
+export const blocksNoEmbeddingValidator = v.object({
   _id: v.id("blocks"),
   _creationTime: v.number(),
   type: v.string(),
@@ -261,14 +262,16 @@ export const getBlocksByVectorSearch = action({
     query: v.string(),
   },
   returns: v.object({
-    article: v.object({
-      _id: v.id("articles"),
-      _creationTime: v.number(),
-      title: v.optional(v.string()),
-      categoryId: v.optional(v.id("categories")),
-      url: v.string(),
-    }),
-    blocks: v.array(blocksNoEmbeddingValidator),
+    articles: v.array(
+      v.object({
+        _id: v.id("articles"),
+        _creationTime: v.number(),
+        title: v.optional(v.string()),
+        categoryId: v.optional(v.id("categories")),
+        url: v.string(),
+        blocks: v.array(blocksNoEmbeddingValidator),
+      })
+    ),
   }),
   handler: async (ctx, args) => {
     const { embed } = await import("ai");
@@ -296,25 +299,24 @@ export const getBlocksByVectorSearch = action({
       },
       {} as Record<Id<"articles">, number>
     );
-    //get the articleId with the highest count
-    const mostRelevantArticleId = Object.keys(articleCounts).reduce((a, b) =>
-      (articleCounts[a as Id<"articles">] ?? 0) >
-      (articleCounts[b as Id<"articles">] ?? 0)
-        ? a
-        : b
-    );
-    console.log("mostRelevantArticleId", mostRelevantArticleId);
-    const article = (await ctx.runQuery(api.article.getArticle, {
-      articleId: mostRelevantArticleId as Id<"articles">,
-    })) as DataModel["articles"]["document"];
-    console.log("article", article);
-    //filter blocks by articleId
-    const filteredBlocks = blocks.filter(
-      (b) => b.articleId === mostRelevantArticleId
-    );
+    //get top 3 articleIds by count
+    const topArticleIds = Object.entries(articleCounts)
+      .sort(([, countA], [, countB]) => countB - countA)
+      .slice(0, 3)
+      .map(([id]) => id as Id<"articles">);
+
+    const articles = (await Promise.all(
+      topArticleIds.map((articleId) =>
+        ctx.runQuery(api.article.getArticleWithBlocks, {
+          articleId,
+        })
+      )
+    )) as (DataModel["articles"]["document"] & {
+      blocks: Omit<DataModel["blocks"]["document"], "embedding">[];
+    })[];
+
     return {
-      article,
-      blocks: filteredBlocks,
+      articles,
     };
   },
 });
@@ -336,3 +338,5 @@ export const getRelevantBlocks = query({
     return blocks.filter((b) => b !== null);
   },
 });
+
+

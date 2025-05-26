@@ -13,10 +13,13 @@ import {
   Spinner,
   ScrollArea,
   Select,
+  Dialog,
 } from "@radix-ui/themes";
 import { useState, useRef, useEffect } from "react";
 import { useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { TrashIcon } from "@radix-ui/react-icons";
+import { Message } from "./Message";
 
 // Replace with your auth logic
 const getUserId = () => "demo-user-123";
@@ -40,12 +43,15 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [dialogOpen, setDialogOpen] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   // Convex actions
   const createThread = useAction(api.agentActions.createThread);
   const continueThread = useAction(api.agentActions.continueThread);
   const listThreads = useAction(api.agentActions.listThreads);
   const listMessages = useAction(api.agentActions.listMessages);
+  const deleteThread = useAction(api.agentActions.deleteThread);
 
   // Load threads on mount
   useEffect(() => {
@@ -150,7 +156,13 @@ export default function ChatPage() {
       <Flex
         direction="column"
         align="center"
-        style={{ maxWidth: 600, margin: "2rem auto", padding: 24 }}
+        style={{
+          maxWidth: 900,
+          margin: "0 auto",
+          padding: 24,
+          minHeight: 0,
+          height: "100vh",
+        }}
       >
         <Text as="div" size="6" weight="bold" mb="4">
           AI Chat
@@ -163,9 +175,79 @@ export default function ChatPage() {
             <Select.Trigger placeholder="Select a thread" />
             <Select.Content>
               {threads.map((thread) => (
-                <Select.Item key={thread._id} value={thread._id}>
-                  {thread.title || thread._id}
-                </Select.Item>
+                <div
+                  key={thread._id}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Select.Item
+                    value={thread._id}
+                    style={{ flex: 1, minWidth: 0 }}
+                  >
+                    {thread.title || thread._id}
+                  </Select.Item>
+                  <Dialog.Root
+                    open={dialogOpen === thread._id}
+                    onOpenChange={(open) =>
+                      setDialogOpen(open ? thread._id : null)
+                    }
+                  >
+                    <Dialog.Trigger>
+                      <Button
+                        variant="ghost"
+                        color="red"
+                        size="1"
+                        style={{ marginLeft: 4 }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDialogOpen(thread._id);
+                        }}
+                        aria-label="Delete thread"
+                      >
+                        <TrashIcon />
+                      </Button>
+                    </Dialog.Trigger>
+                    <Dialog.Content maxWidth="350px">
+                      <Dialog.Title>Delete thread?</Dialog.Title>
+                      <Dialog.Description size="2" mb="4">
+                        Are you sure you want to delete this thread? This action
+                        cannot be undone.
+                      </Dialog.Description>
+                      <Flex gap="3" justify="end">
+                        <Dialog.Close>
+                          <Button
+                            variant="soft"
+                            color="gray"
+                            disabled={deleting}
+                          >
+                            Cancel
+                          </Button>
+                        </Dialog.Close>
+                        <Button
+                          color="red"
+                          loading={deleting}
+                          onClick={async () => {
+                            setDeleting(true);
+                            await deleteThread({ threadId: thread._id });
+                            const res = await listThreads({ userId });
+                            setThreads(res.page);
+                            if (selectedThread === thread._id) {
+                              setSelectedThread(null);
+                              setMessages([]);
+                            }
+                            setDeleting(false);
+                            setDialogOpen(null);
+                          }}
+                        >
+                          Delete
+                        </Button>
+                      </Flex>
+                    </Dialog.Content>
+                  </Dialog.Root>
+                </div>
               ))}
             </Select.Content>
           </Select.Root>
@@ -179,57 +261,54 @@ export default function ChatPage() {
             + New Chat
           </Button>
         </Flex>
-        <Card
+        <Flex
+          direction="column"
           style={{
+            flex: "1 1 0",
             width: "100%",
-            minHeight: 400,
-            maxHeight: 500,
+            maxWidth: 800,
             marginBottom: 24,
-            padding: 0,
+            minHeight: 0,
           }}
         >
-          <ScrollArea
-            type="always"
-            scrollbars="vertical"
-            style={{ height: 400 }}
+          <Card
+            style={{
+              flex: "1 1 0",
+              display: "flex",
+              flexDirection: "column",
+              minHeight: 0,
+              padding: 0,
+            }}
           >
-            <div ref={scrollRef} style={{ padding: 16 }}>
-              {messages.length === 0 && (
-                <Text color="gray">Start the conversation...</Text>
-              )}
-              {messages.map((msg, i) => (
-                <Flex
-                  key={i}
-                  direction="column"
-                  align={msg.role === "user" ? "end" : "start"}
-                  mb="3"
-                >
-                  <Card
-                    style={{
-                      background: msg.role === "user" ? "#e0e7ff" : "#f1f5f9",
-                      maxWidth: "80%",
-                      alignSelf:
-                        msg.role === "user" ? "flex-end" : "flex-start",
-                    }}
+            <ScrollArea
+              type="always"
+              scrollbars="vertical"
+              style={{ flex: "1 1 0", minHeight: 0 }}
+            >
+              <div ref={scrollRef} style={{ padding: 16 }}>
+                {messages.length === 0 && (
+                  <Text color="gray">Start the conversation...</Text>
+                )}
+                {messages.map((msg, i) => (
+                  <Flex
+                    key={i}
+                    direction="column"
+                    align={msg.role === "user" ? "end" : "start"}
+                    mb="3"
                   >
-                    <Text
-                      size="3"
-                      color={msg.role === "user" ? "indigo" : "gray"}
-                    >
-                      {msg.content}
-                    </Text>
-                  </Card>
-                </Flex>
-              ))}
-              {loading && (
-                <Flex align="center" gap="2" mt="2">
-                  <Spinner />
-                  <Text color="gray">AI is typing...</Text>
-                </Flex>
-              )}
-            </div>
-          </ScrollArea>
-        </Card>
+                    <Message role={msg.role} content={msg.content} />
+                  </Flex>
+                ))}
+                {loading && (
+                  <Flex align="center" gap="2" mt="2">
+                    <Spinner />
+                    <Text color="gray">AI is typing...</Text>
+                  </Flex>
+                )}
+              </div>
+            </ScrollArea>
+          </Card>
+        </Flex>
         <form onSubmit={handleSend} style={{ width: "100%" }}>
           <Flex gap="3">
             <TextField.Root
@@ -246,14 +325,16 @@ export default function ChatPage() {
           </Flex>
         </form>
         <Text color="gray" mt="4" size="2">
-          Powered by Convex Agent.{" "}
+          Powered by{" "}
           <a
-            href="https://www.convex.dev/components/agent"
+            href="https://xoxo-labs.com"
             target="_blank"
             rel="noopener noreferrer"
+            style={{ color: "#2563eb", textDecoration: "underline" }}
           >
-            Learn more
+            xoxo-labs
           </a>
+          .
         </Text>
       </Flex>
     </Theme>
