@@ -16,6 +16,7 @@ import { useState } from "react";
 import { useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import Image from "next/image";
 
 type Article = {
   _id: Id<"articles">;
@@ -57,7 +58,11 @@ export default function VectorSearchPage() {
     setResult(null);
     try {
       const res = await searchBlocks({ query });
-      setResult(res);
+      if (res.articles && res.articles.length > 0) {
+        setResult({ article: res.articles[0], blocks: res.articles[0].blocks });
+      } else {
+        setResult(null);
+      }
     } catch {
       setError("Something went wrong. Please try again.");
     }
@@ -130,16 +135,18 @@ export default function VectorSearchPage() {
                   {block.type === "text" && <Text as="div">{block.text}</Text>}
                   {block.type === "image" && (
                     <Flex direction="column" gap="2">
-                      <img
-                        src={block.src}
-                        alt={block.alt || "image"}
-                        style={{
-                          maxWidth: 300,
-                          maxHeight: 200,
-                          borderRadius: 8,
-                          border: "1px solid #eee",
-                        }}
-                      />
+                      {block.src && (
+                        <Image
+                          src={block.src}
+                          alt={block.alt || "image"}
+                          style={{
+                            maxWidth: 300,
+                            maxHeight: 200,
+                            borderRadius: 8,
+                            border: "1px solid #eee",
+                          }}
+                        />
+                      )}
                       {block.alt && (
                         <Text size="1" color="gray">
                           {block.alt}
