@@ -4,7 +4,7 @@ import { z } from "zod";
 export const env = createEnv({
   server: {
     CLERK_SECRET_KEY: z.string(),
-    CONVEX_DEPLOYMENT: z.string(),
+    CONVEX_DEPLOYMENT: z.string().optional(),
     // BROWSERBASE_API_KEY: z.string(),
     // BROWSERBASE_PROJECT_ID: z.string(),
   },
