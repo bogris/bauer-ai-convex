@@ -4,7 +4,6 @@ import { z } from "zod";
 export const env = createEnv({
   server: {
     // CLERK_SECRET_KEY: z.string(),
-    CONVEX_DEPLOYMENT: z.string().optional(),
     // BROWSERBASE_API_KEY: z.string(),
     // BROWSERBASE_PROJECT_ID: z.string(),
   },
@@ -16,7 +15,6 @@ export const env = createEnv({
   // If you're using Next.js < 13.4.4, you'll need to specify the runtimeEnv manually
   runtimeEnv: {
     // CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
-    CONVEX_DEPLOYMENT: process.env.CONVEX_DEPLOYMENT,
     NEXT_PUBLIC_CONVEX_URL: process.env.NEXT_PUBLIC_CONVEX_URL,
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:
       process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
