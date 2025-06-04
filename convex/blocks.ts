@@ -67,34 +67,31 @@ export const addAiSummary = mutation({
   },
 });
 
-export const blocksNoEmbeddingValidator = v.object({
-  _id: v.id("blocks"),
-  _creationTime: v.number(),
-  type: v.string(),
-  text: v.optional(v.string()),
-  items: v.optional(v.array(v.string())),
-  code: v.optional(v.string()),
-  src: v.optional(v.string()),
-  alt: v.optional(v.string()),
-  encoding: v.optional(v.string()),
-  aiSummary: v.optional(v.string()),
-  articleId: v.id("articles"),
-  ordered: v.optional(v.boolean()),
-});
+// export const blocksNoEmbeddingValidator = v.object({
+//   _id: v.id("blocks"),
+//   _creationTime: v.number(),
+//   type: v.string(),
+//   text: v.optional(v.string()),
+//   items: v.optional(v.array(v.string())),
+//   code: v.optional(v.string()),
+//   src: v.optional(v.string()),
+//   alt: v.optional(v.string()),
+//   encoding: v.optional(v.string()),
+//   aiSummary: v.optional(v.string()),
+//   articleId: v.id("articles"),
+//   ordered: v.optional(v.boolean()),
+// });
 export const getArticleBlocks = query({
   args: {
     articleId: v.id("articles"),
   },
-  returns: v.array(blocksNoEmbeddingValidator),
+  // returns: v.array(blocksNoEmbeddingValidator),
   handler: async (ctx, args) => {
     const blocks = await ctx.db
       .query("blocks")
       .withIndex("by_article_id", (q) => q.eq("articleId", args.articleId))
       .collect();
-    return blocks.map((b) => {
-      delete b.embedding;
-      return b;
-    });
+    return blocks;
   },
 });
 
@@ -108,17 +105,14 @@ export const getBlocksByType = query({
       v.literal("code")
     ),
   },
-  returns: v.array(blocksNoEmbeddingValidator),
+  // returns: v.array(blocksNoEmbeddingValidator),
   handler: async (ctx, args) => {
     const blocks = await ctx.db
       .query("blocks")
       .withIndex("by_type", (q) => q.eq("type", args.type))
       .collect();
 
-    return blocks.map((b) => {
-      delete b.embedding;
-      return b;
-    });
+    return blocks;
   },
 });
 
@@ -182,33 +176,11 @@ export const enrichImageBlocks = action({
   },
 });
 
-export const setBlockEmbedding = mutation({
-  args: {
-    blockId: v.id("blocks"),
-    embedding: v.array(v.float64()),
-  },
-  returns: v.null(),
-  handler: async (ctx, args) => {
-    await ctx.db.patch(args.blockId, { embedding: args.embedding });
-    return null;
-  },
-});
 
-export const getBlockEmbedding = query({
-  args: {
-    blockId: v.id("blocks"),
-  },
-  returns: v.array(v.float64()),
-  handler: async (ctx, args) => {
-    const block = await ctx.db.get(args.blockId);
-    return block?.embedding ?? [];
-  },
-});
 
 export const generateEmbeddingsForArticleBlocks = action({
   args: {
     articleId: v.id("articles"),
-    overwrite: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     // Fetch all blocks for the article
@@ -218,18 +190,6 @@ export const generateEmbeddingsForArticleBlocks = action({
     // For each block, generate an embedding and patch the block
     await Promise.all(
       blocks.map(async (block) => {
-        if (!args.overwrite) {
-          const existingEmbedding = await ctx.runQuery(
-            api.blocks.getBlockEmbedding,
-            {
-              blockId: block._id,
-            }
-          );
-          if (existingEmbedding.length > 0) {
-            console.log("Block already has an embedding, skipping");
-            return;
-          }
-        }
         const { embed } = await import("ai");
         const { openai } = await import("@ai-sdk/openai");
         let textForEmbedding = "";
@@ -248,7 +208,7 @@ export const generateEmbeddingsForArticleBlocks = action({
           value: textForEmbedding,
         });
         // Patch the block with the embedding using the mutation
-        await ctx.runMutation(api.blocks.setBlockEmbedding, {
+        await ctx.runMutation(api.embeddings.upsertBlockEmbedding, {
           blockId: block._id,
           embedding: embeddingResponse.embedding,
         });
@@ -257,22 +217,31 @@ export const generateEmbeddingsForArticleBlocks = action({
   },
 });
 
+export const getEmbedding = query({
+  args: {
+    id: v.id("embeddings"),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.id);
+  },
+});
+
 export const getBlocksByVectorSearch = action({
   args: {
     query: v.string(),
   },
-  returns: v.object({
-    articles: v.array(
-      v.object({
-        _id: v.id("articles"),
-        _creationTime: v.number(),
-        title: v.optional(v.string()),
-        categoryId: v.optional(v.id("categories")),
-        url: v.string(),
-        blocks: v.array(blocksNoEmbeddingValidator),
-      })
-    ),
-  }),
+  // returns: v.object({
+  //   articles: v.array(
+  //     v.object({
+  //       _id: v.id("articles"),
+  //       _creationTime: v.number(),
+  //       title: v.optional(v.string()),
+  //       categoryId: v.optional(v.id("categories")),
+  //       url: v.string(),
+  //       blocks: v.array(blocksNoEmbeddingValidator),
+  //     })
+  //   ),
+  // }),
   handler: async (ctx, args) => {
     const { embed } = await import("ai");
     const { openai } = await import("@ai-sdk/openai");
@@ -280,15 +249,28 @@ export const getBlocksByVectorSearch = action({
       model: openai.embedding("text-embedding-3-small"),
       value: args.query,
     });
-    const blocksIds = await ctx.vectorSearch("blocks", "by_embedding", {
-      vector: embeddingResponse.embedding,
-      limit: 10,
-    });
+    const embeddingsSearchResults = await ctx.vectorSearch(
+      "embeddings",
+      "by_embedding",
+      {
+        vector: embeddingResponse.embedding,
+        filter: (q) => q.eq("type", "block"),
+        limit: 10,
+      }
+    );
+    const blockIds = await Promise.all(
+      embeddingsSearchResults.map(async (sr) => {
+        const embedding = await ctx.runQuery(api.blocks.getEmbedding, {
+          id: sr._id,
+        });
+        return embedding?.blockId;
+      })
+    );
+
     const blocks = (await ctx.runQuery(api.blocks.getRelevantBlocks, {
-      ids: blocksIds.map(
-        (b: { _id: string; _score: number }) => b._id as Id<"blocks">
-      ),
+      ids: blockIds.filter((b) => b !== undefined),
     })) as DataModel["blocks"]["document"][];
+    console.log(blocks);
     //logic to only get the article that is the most relevant
     const articleIds = blocks.map((b) => b.articleId);
     //check counts by articleId
@@ -317,6 +299,7 @@ export const getBlocksByVectorSearch = action({
 
     return {
       articles,
+      blocks,
     };
   },
 });
@@ -325,13 +308,12 @@ export const getRelevantBlocks = query({
   args: {
     ids: v.array(v.id("blocks")),
   },
-  returns: v.array(blocksNoEmbeddingValidator),
+  // returns: v.array(blocksNoEmbeddingValidator),
   handler: async (ctx, args) => {
     const blocks = await Promise.all(
       args.ids.map(async (id) => {
         const block = await ctx.db.get(id);
         if (!block) return null;
-        delete block.embedding;
         return block;
       })
     );

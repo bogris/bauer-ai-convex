@@ -18,6 +18,25 @@ export default defineSchema({
     url: v.string(),
     categoryId: v.optional(v.id("categories")),
   }),
+  embeddings: defineTable(
+    v.union(
+      //for the future..
+      // v.object({
+      //   type: v.literal("article"),
+      //   articleId: v.id("articles"),
+      //   embedding: v.array(v.float64()),
+      // }),
+      v.object({
+        type: v.literal("block"),
+        blockId: v.id("blocks"),
+        embedding: v.array(v.float64()),
+      })
+    )
+  ).vectorIndex("by_embedding", {
+    vectorField: "embedding",
+    filterFields: ["type"],
+    dimensions: 1536,
+  }),
   blocks: defineTable(
     v.union(
       v.object({
@@ -25,13 +44,11 @@ export default defineSchema({
         level: v.string(),
         text: v.string(),
         articleId: v.id("articles"),
-        embedding: v.optional(v.array(v.float64())),
       }),
       v.object({
         type: v.literal("text"),
         text: v.string(),
         articleId: v.id("articles"),
-        embedding: v.optional(v.array(v.float64())),
       }),
       v.object({
         type: v.literal("image"),
@@ -40,27 +57,24 @@ export default defineSchema({
         encoding: v.string(),
         articleId: v.id("articles"),
         aiSummary: v.optional(v.string()),
-        embedding: v.optional(v.array(v.float64())),
       }),
       v.object({
         type: v.literal("list"),
         ordered: v.boolean(),
         items: v.array(v.string()),
         articleId: v.id("articles"),
-        embedding: v.optional(v.array(v.float64())),
       }),
       v.object({
         type: v.literal("code"),
         code: v.string(),
         articleId: v.id("articles"),
-        embedding: v.optional(v.array(v.float64())),
       })
     )
   )
     .index("by_article_id", ["articleId"])
-    .index("by_type", ["type"])
-    .vectorIndex("by_embedding", {
-      vectorField: "embedding",
-      dimensions: 1536,
-    }),
+    .index("by_type", ["type"]),
+  // .vectorIndex("by_embedding", {
+  //   vectorField: "embedding",
+  //   dimensions: 1536,
+  // }),
 });

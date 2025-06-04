@@ -16,7 +16,6 @@ import { useState } from "react";
 import { useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import Image from "next/image";
 
 type Article = {
   _id: Id<"articles">;
@@ -59,7 +58,7 @@ export default function VectorSearchPage() {
     try {
       const res = await searchBlocks({ query });
       if (res.articles && res.articles.length > 0) {
-        setResult({ article: res.articles[0], blocks: res.articles[0].blocks });
+        setResult({ article: res.articles[0], blocks: res.blocks });
       } else {
         setResult(null);
       }
@@ -136,7 +135,7 @@ export default function VectorSearchPage() {
                   {block.type === "image" && (
                     <Flex direction="column" gap="2">
                       {block.src && (
-                        <Image
+                        <img
                           src={block.src}
                           alt={block.alt || "image"}
                           style={{
