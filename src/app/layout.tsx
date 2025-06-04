@@ -1,8 +1,16 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import "@radix-ui/themes/styles.css";
 import "./globals.css";
 import { ConvexClientProvider } from "@/providers/convex-provider";
-import { ClerkProvider } from '@clerk/nextjs'
+import {
+  ClerkProvider,
+  SignedIn,
+  SignedOut,
+  SignInButton,
+} from "@clerk/nextjs";
+import Navbar from "./components/Navbar";
+import { Theme } from "@radix-ui/themes";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,14 +33,29 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-      <ClerkProvider>
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-          <ConvexClientProvider>{children}</ConvexClientProvider>
-      </body>
-    </html>
-        </ClerkProvider>
+    <ClerkProvider>
+      <Theme>
+        <html lang="en">
+          <body
+            className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+          >
+            <ConvexClientProvider>
+              <Navbar />
+              <main>
+                <SignedIn>{children}</SignedIn>
+                <SignedOut>
+                  <div className="flex flex-col items-center justify-center min-h-[60vh]">
+                    <p className="mb-4 text-lg text-gray-600">
+                      Please sign in to access the app features.
+                    </p>
+                    <SignInButton />
+                  </div>
+                </SignedOut>
+              </main>
+            </ConvexClientProvider>
+          </body>
+        </html>
+      </Theme>
+    </ClerkProvider>
   );
 }

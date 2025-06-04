@@ -1,6 +1,6 @@
 /** @format */
 
-import { action } from "./_generated/server";
+import { action, query } from "./_generated/server";
 import { v } from "convex/values";
 import { supportAgent } from "./agent";
 import { components } from "./_generated/api";
@@ -18,16 +18,7 @@ export const createThread = action({
       userId,
       title: threadName.text,
     });
-    //   api.blocks.getBlocksByVectorSearch,
-    //   {
-    //     query: prompt,
-    //   }
-    // );
-    // const finalPrompt: string = `Here are some useful informations that you may or may not use:
-    // ${JSON.stringify(enrichBlocksArticleData)}
-    // ===================
-    // The user asked: ${prompt}
-    // `;
+
     const result = await thread.generateText({ prompt });
     return { threadId, aiMessage: result.text };
   },
@@ -42,7 +33,7 @@ export const continueThread = action({
   },
 });
 
-export const listThreads = action({
+export const listThreads = query({
   args: { userId: v.string() },
   handler: async (ctx, { userId }) => {
     return await ctx.runQuery(components.agent.threads.listThreadsByUserId, {
