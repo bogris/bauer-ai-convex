@@ -3,7 +3,7 @@
 import { v } from "convex/values";
 import { action, mutation, query } from "./_generated/server";
 import { api } from "./_generated/api";
-import { DataModel, Id } from "./_generated/dataModel";
+import { DataModel, Doc, Id } from "./_generated/dataModel";
 
 
 export const getImageBlockContext = query({
@@ -184,9 +184,9 @@ export const generateEmbeddingsForArticleBlocks = action({
   },
   handler: async (ctx, args) => {
     // Fetch all blocks for the article
-    const blocks = await ctx.runQuery(api.blocks.getArticleBlocks, {
+    const blocks = (await ctx.runQuery(api.blocks.getArticleBlocks, {
       articleId: args.articleId,
-    });
+    })) as Doc<"blocks">[];
     // For each block, generate an embedding and patch the block
     await Promise.all(
       blocks.map(async (block) => {

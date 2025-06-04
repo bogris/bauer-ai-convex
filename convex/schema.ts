@@ -17,6 +17,7 @@ export default defineSchema({
     title: v.optional(v.string()),
     url: v.string(),
     categoryId: v.optional(v.id("categories")),
+    testToMigrate: v.optional(v.boolean()),
   }),
   embeddings: defineTable(
     v.union(

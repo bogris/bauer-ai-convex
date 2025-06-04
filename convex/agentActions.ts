@@ -3,7 +3,7 @@
 import { action } from "./_generated/server";
 import { v } from "convex/values";
 import { supportAgent } from "./agent";
-import { api, components } from "./_generated/api";
+import { components } from "./_generated/api";
 import { generateText } from "ai";
 import { openai } from "@ai-sdk/openai";
 
@@ -18,18 +18,17 @@ export const createThread = action({
       userId,
       title: threadName.text,
     });
-    const enrichBlocksArticleData = await ctx.runAction(
-      api.blocks.getBlocksByVectorSearch,
-      {
-        query: prompt,
-      }
-    );
-    const finalPrompt: string = `Here are some useful informations that you may or may not use: 
-    ${JSON.stringify(enrichBlocksArticleData)} 
-    ===================
-    The user asked: ${prompt}
-    `;
-    const result = await thread.generateText({ prompt: finalPrompt });
+    //   api.blocks.getBlocksByVectorSearch,
+    //   {
+    //     query: prompt,
+    //   }
+    // );
+    // const finalPrompt: string = `Here are some useful informations that you may or may not use:
+    // ${JSON.stringify(enrichBlocksArticleData)}
+    // ===================
+    // The user asked: ${prompt}
+    // `;
+    const result = await thread.generateText({ prompt });
     return { threadId, aiMessage: result.text };
   },
 });
