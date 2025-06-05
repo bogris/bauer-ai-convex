@@ -4,7 +4,6 @@ import { api } from "@/convex/_generated/api";
 import { useThreadMessages } from "@convex-dev/agent/react";
 import { Message } from "../chat/Message";
 import { useRef, useEffect } from "react";
-import { Spinner } from "@radix-ui/themes";
 import { Text } from "@radix-ui/themes";
 
 export default function ThreadView(props: { threadId: string }) {
@@ -21,7 +20,6 @@ export default function ThreadView(props: { threadId: string }) {
     console.log(`MESSAGES`, messages.status, messages.results);
   }, [messages.results]);
 
-  const isLoading = messages.isLoading;
   // Scroll to bottom on new message
   useEffect(() => {
     if (scrollRef.current) {

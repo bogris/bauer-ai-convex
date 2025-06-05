@@ -1,15 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import {
-  Theme,
-  Text,
-  Button,
-  Card,
-  Progress,
-  Flex,
-  Tabs,
-} from "@radix-ui/themes";
+import { Theme, Text, Flex, Tabs } from "@radix-ui/themes";
 import { useQuery, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -59,8 +51,10 @@ export default function ImageBlockServicePage() {
       try {
         await enrichImageBlocks({ articleId: articleIds[i], override: false });
         setProgress(((i + 1) / articleIds.length) * 100);
-      } catch (e: any) {
-        setError(e.message || "Error enriching image blocks");
+      } catch (e: unknown) {
+        setError(
+          e instanceof Error ? e.message : "Error enriching image blocks"
+        );
         setLoading(false);
         return;
       }
@@ -91,8 +85,10 @@ export default function ImageBlockServicePage() {
       try {
         await generateEmbeddings({ articleId: articles[i]._id });
         setEmbeddingsProgress(((i + 1) / articles.length) * 100);
-      } catch (e: any) {
-        setEmbeddingsError(e.message || "Error generating embeddings");
+      } catch (e: unknown) {
+        setEmbeddingsError(
+          e instanceof Error ? e.message : "Error generating embeddings"
+        );
         setEmbeddingsLoading(false);
         return;
       }

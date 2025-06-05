@@ -2,19 +2,13 @@
 
 "use client";
 import "@radix-ui/themes/styles.css";
-import { Theme, Text, Button, Select, IconButton } from "@radix-ui/themes";
+import { Theme, Text, Button, Select } from "@radix-ui/themes";
 import { useState, useMemo } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Doc, Id } from "@/convex/_generated/dataModel";
 import { ExternalLinkIcon } from "@radix-ui/react-icons";
 
-// Type for article
-interface Article {
-  _id: Id<"articles">;
-  title?: string;
-  url: string;
-}
 
 // Type for block
 interface Block {
