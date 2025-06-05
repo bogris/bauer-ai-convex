@@ -60,7 +60,7 @@ export const listThreads = query({
       });
     } catch (e) {
       // console.error(e);
-      return [];
+      return undefined;
     }
   },
 });
