@@ -15,6 +15,11 @@ import { getUserId } from "./auth";
 import { paginationOptsValidator } from "convex/server";
 // import { Id } from "./_generated/dataModel";
 
+const modeNames = v.union(
+  v.literal("gpt-4.1-mini"),
+  v.literal("gpt-4.1"),
+  v.literal("gpt-4o")
+);
 export const createThread = action({
   args: { prompt: v.string() },
   handler: async (ctx, { prompt }) => {
@@ -147,9 +152,7 @@ export const sendMessageToThreadFromUser = mutation({
   args: {
     message: v.string(),
     threadId: v.string(),
-    modelName: v.optional(
-      v.union(v.literal("gpt-4.1-mini"), v.literal("gpt-4.1"))
-    ),
+    modelName: v.optional(modeNames),
     // userId: v.id("users"),
   },
   handler: async (ctx, args) => {
@@ -185,7 +188,7 @@ export const streamResponse = internalAction({
   args: {
     promptMessageId: v.string(),
     threadId: v.string(),
-    modelName: v.union(v.literal("gpt-4.1-mini"), v.literal("gpt-4.1")),
+    modelName: modeNames,
   },
   handler: async (ctx, { promptMessageId, threadId, modelName }) => {
     // Generate the embeddings for the message from the user, this shouldnt be

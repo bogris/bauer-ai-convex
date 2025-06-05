@@ -17,17 +17,30 @@ import DeleteThreadButton from "./components/DeleteThread";
 import ThreadView from "./components/ThreadView";
 import { optimisticallySendMessage } from "@convex-dev/agent/react";
 import { PlusIcon } from "@radix-ui/react-icons";
+import { z } from "zod";
+
+const modelNames = z.enum(["gpt-4.1-mini", "gpt-4.1", "gpt-4o"]);
+type ModelName = z.infer<typeof modelNames>;
+
+const modelNamesLabels: Record<ModelName, string> = {
+  "gpt-4.1-mini": "mini GPT",
+  "gpt-4.1": "... GPT",
+  "gpt-4o": "GPT-4o",
+};
 
 const ModelSelect = (props: {
-  onChange: (modelName: "gpt-4.1-mini" | "gpt-4.1") => void;
-  value: "gpt-4.1-mini" | "gpt-4.1";
+  onChange: (modelName: ModelName) => void;
+  value: ModelName;
 }) => {
   return (
     <Select.Root value={props.value} onValueChange={props.onChange}>
       <Select.Trigger variant="ghost" />
       <Select.Content>
-        <Select.Item value="gpt-4.1-mini">mini GPT</Select.Item>
-        <Select.Item value="gpt-4.1">... GPT</Select.Item>
+        {modelNames.options.map((modelName) => (
+          <Select.Item value={modelName}>
+            {modelNamesLabels[modelName]}
+          </Select.Item>
+        ))}
       </Select.Content>
     </Select.Root>
   );
@@ -40,9 +53,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false);
   const convex = useConvex();
 
-  const [modelName, setModelName] = useState<"gpt-4.1-mini" | "gpt-4.1">(
-    "gpt-4.1-mini"
-  );
+  const [modelName, setModelName] = useState<ModelName>("gpt-4.1-mini");
   const afterDelete = async (threadId: string) => {
     if (selectedThread === threadId) {
       setSelectedThread(null);
