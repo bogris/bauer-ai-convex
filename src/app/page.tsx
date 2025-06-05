@@ -176,7 +176,7 @@ export default function HomePage() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Type your message..."
-                className="flex-1 min-w-0 max-w-full"
+                className="flex-1 min-w-0"
                 size={{ initial: "2", md: "3" }}
                 disabled={loading}
               />
