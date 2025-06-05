@@ -6,7 +6,7 @@ import { Theme, Text, Button, Select } from "@radix-ui/themes";
 import { useState, useMemo } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
+import { Doc, Id } from "@/convex/_generated/dataModel";
 
 // Type for article
 interface Article {
@@ -135,18 +135,18 @@ export default function ArticlesPage() {
   const [selectedId, setSelectedId] = useState<Id<"articles"> | null>(null);
 
   // Fetch all articles
-  const articles =
-    (useQuery(api.importArticles.listAllArticles) as Article[]) ?? [];
+  const articles = (useQuery(api.importArticles.listAllArticles) ??
+    []) as Doc<"articles">[];
 
   // Filtered articles by search
-  const filtered = useMemo(() => {
+  const filtered = useMemo<Doc<"articles">[]>(() => {
     if (!search) return articles;
     return articles.filter(
       (a) =>
         a.title?.toLowerCase().includes(search.toLowerCase()) ||
         a.url?.toLowerCase().includes(search.toLowerCase())
     );
-  }, [articles, search]);
+  }, [articles.length, search]);
 
   // Magic article id for quick access (replace with a real one from your db)
   const MAGIC_ARTICLE_ID =

@@ -8,7 +8,7 @@ import { Doc } from "./_generated/dataModel";
 // import { tool } from "ai";
 
 export const supportAgent = new Agent(components.agent, {
-  chat: openai.chat("gpt-4o-mini"),
+  chat: openai.chat("gpt-4.1-mini"),
   instructions: `You are a helpful assistant for Bauer irrigation equipment. You have a tool to search documentation
   You will always use the tool to search documentation in order to provide accurate answers.
   if the tool doese not offer relevant results, give it your best shot, but signal this to the user that the docs were inaccurate. 

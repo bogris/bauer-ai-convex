@@ -1,124 +1,57 @@
 "use client";
 
 import "@radix-ui/themes/styles.css";
-import { Theme, Text, TextField, Button, Spinner } from "@radix-ui/themes";
-import { useState, useRef, useEffect } from "react";
-import { useAction, useQuery } from "convex/react";
+import { Theme, Text, TextField, Button } from "@radix-ui/themes";
+import { useState } from "react";
+import { useConvex, useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Message } from "./chat/Message";
 import DeleteThreadButton from "./components/DeleteThread";
-
-// Replace with your auth logic
-const getUserId = () => "demo-user-123";
-
-type MessageType = {
-  _id: string;
-  role: "user" | "assistant";
-  content: string;
-};
+import ThreadView from "./components/ThreadView";
+import { optimisticallySendMessage } from "@convex-dev/agent/react";
 
 export default function HomePage() {
-  const userId = getUserId();
-  const threads = useQuery(api.agentActions.listThreads, { userId });
+  const threads = useQuery(api.agentActions.listThreads);
   const [selectedThread, setSelectedThread] = useState<string | null>(null);
-  const [messages, setMessages] = useState<MessageType[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  // Convex actions
-  const createThread = useAction(api.agentActions.createThread);
-  const continueThread = useAction(api.agentActions.continueThread);
-  const listMessages = useAction(api.agentActions.listMessages);
+  const convex = useConvex();
 
   const afterDelete = async (threadId: string) => {
     if (selectedThread === threadId) {
       setSelectedThread(null);
-      setMessages([]);
     }
   };
 
-  // Load messages when thread changes
-  useEffect(() => {
-    if (!selectedThread) return;
-    (async () => {
-      const res = await listMessages({ threadId: selectedThread });
-      setMessages(
-        res.page
-          .filter(
-            (msg) =>
-              msg.message?.role === "user" || msg.message?.role === "assistant"
-          )
-          .map((msg) => {
-            let content = "";
-            if (msg.message) {
-              if (typeof msg.message.content === "string") {
-                content = msg.message.content;
-              } else if (Array.isArray(msg.message.content)) {
-                // Only extract .text from items of type 'text'
-                type TextContent = { type: "text"; text: string };
-                function isTextContent(c: unknown): c is TextContent {
-                  return (
-                    typeof c === "object" &&
-                    c !== null &&
-                    "type" in c &&
-                    (c as { type?: unknown }).type === "text" &&
-                    "text" in c &&
-                    typeof (c as { text?: unknown }).text === "string"
-                  );
-                }
-                content = msg.message.content
-                  .filter(isTextContent)
-                  .map((c) => c.text)
-                  .join(" ");
-              }
-            }
-            return {
-              _id: msg._id,
-              role: msg.message?.role as "user" | "assistant",
-              content,
-            };
-          })
-      );
-    })();
-    // eslint-disable-next-line
-  }, [selectedThread]);
-
-  // Scroll to bottom on new message
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages]);
+  const sendMessage = useMutation(
+    api.agentActions.sendMessageToThreadFromUser
+  ).withOptimisticUpdate((store) => {
+    optimisticallySendMessage(api.agentActions.listMessagesForUserThread)(
+      store,
+      {
+        threadId: selectedThread!,
+        prompt: input,
+      }
+    );
+  });
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
     setLoading(true);
-
-    if (!selectedThread) {
-      // New thread
-      const res = await createThread({ prompt: input, userId });
-      setSelectedThread(res.threadId);
-      setMessages([
-        { _id: `${Date.now()}`, role: "user", content: input },
-        { _id: `${Date.now()}-ai`, role: "assistant", content: res.aiMessage },
-      ]);
-      // No need to reload threads, useQuery will update automatically
-    } else {
-      // Continue thread
-      setMessages((msgs) => [
-        ...msgs,
-        { _id: `${Date.now()}`, role: "user", content: input },
-      ]);
-      const res = await continueThread({
+    let resolvedThreadId = selectedThread;
+    if (!resolvedThreadId) {
+      const { threadId } = await convex.action(api.agentActions.createThread, {
         prompt: input,
-        threadId: selectedThread,
       });
-      setMessages((msgs) => [
-        ...msgs,
-        { _id: `${Date.now()}-ai`, role: "assistant", content: res.aiMessage },
-      ]);
+      resolvedThreadId = threadId;
+      setSelectedThread(threadId);
     }
+
+    sendMessage({
+      message: input,
+      threadId: resolvedThreadId,
+    });
+
     setInput("");
     setLoading(false);
   };
@@ -133,7 +66,7 @@ export default function HomePage() {
             <Button
               onClick={() => {
                 setSelectedThread(null);
-                setMessages([]);
+                // setMessages([]);
               }}
               variant="surface"
               size="2"
@@ -182,29 +115,13 @@ export default function HomePage() {
           <div className="flex-1 flex flex-col p-6 min-h-0">
             <div className="flex-1 flex flex-col min-h-0">
               <div className="flex-1 flex flex-col min-h-0 rounded-lg  border-gray-300 border">
-                <div
-                  className="flex-1 overflow-y-auto p-4"
-                  ref={scrollRef}
-                  style={{ minHeight: 0 }}
-                >
-                  {messages.length === 0 && (
-                    <Text color="gray">Start the conversation...</Text>
-                  )}
-                  {messages.map((msg, i) => (
-                    <div
-                      key={i}
-                      className={`flex flex-col mb-3 ${msg.role === "user" ? "items-end" : "items-start"}`}
-                    >
-                      <Message role={msg.role} content={msg.content} />
-                    </div>
-                  ))}
-                  {loading && (
-                    <div className="flex items-center gap-2 mt-2">
-                      <Spinner />
-                      <Text color="gray">AI is typing...</Text>
-                    </div>
-                  )}
-                </div>
+                {selectedThread ? (
+                  <ThreadView threadId={selectedThread} />
+                ) : (
+                  <Text color="gray" className="m-4">
+                    Select a thread to start a conversation
+                  </Text>
+                )}
               </div>
             </div>
             <form onSubmit={handleSend} className="mt-4 flex gap-3">

@@ -1,3 +1,5 @@
+/** @format */
+
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "@radix-ui/themes/styles.css";
@@ -34,11 +36,11 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <Theme>
-        <html lang="en">
-          <body
-            className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-          >
+      <html lang="en">
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        >
+          <Theme>
             <ConvexClientProvider>
               <Navbar />
               <main>
@@ -53,9 +55,9 @@ export default function RootLayout({
                 </SignedOut>
               </main>
             </ConvexClientProvider>
-          </body>
-        </html>
-      </Theme>
+          </Theme>
+        </body>
+      </html>
     </ClerkProvider>
   );
 }

@@ -1,4 +1,4 @@
-/** @format */
+"use client";
 
 import { api } from "@/convex/_generated/api";
 import { TrashIcon } from "@radix-ui/react-icons";
