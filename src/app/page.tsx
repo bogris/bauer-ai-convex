@@ -37,7 +37,7 @@ const ModelSelect = (props: {
       <Select.Trigger variant="ghost" />
       <Select.Content>
         {modelNames.options.map((modelName) => (
-          <Select.Item value={modelName}>
+          <Select.Item value={modelName} key={modelName}>
             {modelNamesLabels[modelName]}
           </Select.Item>
         ))}
