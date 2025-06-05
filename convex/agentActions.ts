@@ -50,13 +50,18 @@ export const createThread = action({
 export const listThreads = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await getUserId(ctx);
+    try {
+      const userId = await getUserId(ctx);
 
-    return await ctx.runQuery(components.agent.threads.listThreadsByUserId, {
-      userId,
-      order: "desc",
-      paginationOpts: { cursor: null, numItems: 20 },
-    });
+      return await ctx.runQuery(components.agent.threads.listThreadsByUserId, {
+        userId,
+        order: "desc",
+        paginationOpts: { cursor: null, numItems: 20 },
+      });
+    } catch (e) {
+      // console.error(e);
+      return [];
+    }
   },
 });
 
