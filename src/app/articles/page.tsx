@@ -2,11 +2,12 @@
 
 "use client";
 import "@radix-ui/themes/styles.css";
-import { Theme, Text, Button, Select } from "@radix-ui/themes";
+import { Theme, Text, Button, Select, IconButton } from "@radix-ui/themes";
 import { useState, useMemo } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Doc, Id } from "@/convex/_generated/dataModel";
+import { ExternalLinkIcon } from "@radix-ui/react-icons";
 
 // Type for article
 interface Article {
@@ -40,7 +41,13 @@ const BLOCK_TYPES = [
   { value: "code", label: "Code" },
 ];
 
-function ArticleBlocks({ articleId }: { articleId: Id<"articles"> }) {
+function ArticleBlocks({
+  articleId,
+  selectedArticleUrl,
+}: {
+  articleId: Id<"articles">;
+  selectedArticleUrl: string | null;
+}) {
   const [blockType, setBlockType] = useState<string>("all");
   const blocks = useQuery(api.blocks.getArticleBlocks, { articleId });
   const filteredBlocks = useMemo(() => {
@@ -55,11 +62,11 @@ function ArticleBlocks({ articleId }: { articleId: Id<"articles"> }) {
   return (
     <div>
       <div className="flex items-center gap-4 mb-4">
-        <Text as="label" size="3">
+        <Text as="label" size="2">
           Block type:
         </Text>
-        <Select.Root value={blockType} onValueChange={setBlockType}>
-          <Select.Trigger className="w-32" />
+        <Select.Root value={blockType} onValueChange={setBlockType} size={"1"}>
+          <Select.Trigger />
           <Select.Content>
             {BLOCK_TYPES.map((t) => (
               <Select.Item key={t.value} value={t.value}>
@@ -68,6 +75,22 @@ function ArticleBlocks({ articleId }: { articleId: Id<"articles"> }) {
             ))}
           </Select.Content>
         </Select.Root>
+        {selectedArticleUrl && (
+          <a
+            href={selectedArticleUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Button
+              variant="outline"
+              size="1"
+              className="flex items-center gap-2"
+            >
+              <ExternalLinkIcon />
+              Open in new tab
+            </Button>
+          </a>
+        )}
       </div>
       <div className="space-y-4">
         {filteredBlocks.map((block: Block) => (
@@ -152,6 +175,10 @@ export default function ArticlesPage() {
   const MAGIC_ARTICLE_ID =
     articles[0]?._id || ("magic-article-id" as Id<"articles">);
 
+  const selectedArticleUrl = useMemo(() => {
+    if (!selectedId) return null;
+    return articles.find((a) => a._id === selectedId)?.url;
+  }, [selectedId, articles]);
   return (
     <Theme>
       <div className="flex h-screen">
@@ -188,9 +215,6 @@ export default function ArticlesPage() {
                     <span className="text-gray-400">(No title)</span>
                   )}
                 </Text>
-                <Text as="div" size="1" color="gray">
-                  {article.url}
-                </Text>
               </div>
             ))}
           </div>
@@ -200,7 +224,12 @@ export default function ArticlesPage() {
           {!selectedId && (
             <Text color="gray">Select an article to view its blocks.</Text>
           )}
-          {selectedId && <ArticleBlocks articleId={selectedId} />}
+          {selectedId && (
+            <ArticleBlocks
+              articleId={selectedId}
+              selectedArticleUrl={selectedArticleUrl ?? null}
+            />
+          )}
         </div>
       </div>
     </Theme>

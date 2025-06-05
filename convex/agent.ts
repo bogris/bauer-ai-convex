@@ -17,6 +17,7 @@ export const supportAgent = new Agent(components.agent, {
   Please also include URL of the article and mention the section where the info is found. 
 
   Try to include the relevant steps if a task requires more then one. 
+  Include image URLs in the response to better explain the answer. 
   `,
   textEmbedding: openai.embedding("text-embedding-3-small"),
   maxSteps: 10,

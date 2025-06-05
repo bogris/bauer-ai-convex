@@ -22,7 +22,7 @@ export const createThread = action({
 
     const threadName = await generateText({
       model: openai.chat("gpt-4o-mini"),
-      prompt: `Generate a name for a thread with the following prompt: ${prompt}`,
+      prompt: `Generate a name for a thread with the following prompt: ${prompt}. don't quote the name.`,
     });
     const { threadId, thread } = await supportAgent.createThread(ctx, {
       userId,

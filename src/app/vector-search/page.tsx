@@ -16,6 +16,7 @@ import { useState } from "react";
 import { useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import { ExternalLinkIcon } from "@radix-ui/react-icons";
 
 type Article = {
   _id: Id<"articles">;
@@ -103,16 +104,27 @@ export default function VectorSearchPage() {
         {loading && <Spinner />}
         {result && (
           <Card style={{ width: "100%", marginTop: 24 }}>
-            <Text as="div" size="5" weight="bold" mb="2">
-              Most Relevant Article
-            </Text>
+            <div className="flex gap-4">
+              <Text as="div" size="5" weight="bold" mb="2">
+                Most Relevant Article
+              </Text>
+              <div className="grow"></div>
+              <a
+                href={result.article.url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Button variant="outline" size="1">
+                  <ExternalLinkIcon />
+                  Open in new tab
+                </Button>
+              </a>
+            </div>
+
             <Text as="div" size="4" weight="medium" mb="1">
               {result.article.title || (
                 <span className="text-gray-400">(No title)</span>
               )}
-            </Text>
-            <Text as="div" size="2" color="gray" mb="3">
-              {result.article.url}
             </Text>
             <Text as="div" size="4" weight="bold" mt="4" mb="2">
               Blocks

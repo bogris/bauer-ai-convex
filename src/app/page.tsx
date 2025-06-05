@@ -96,7 +96,7 @@ export default function HomePage() {
                     className="truncate flex-1 min-w-0"
                     title={thread.title || thread._id}
                   >
-                    <Text as="div" size="3">
+                    <Text as="div" size="2">
                       {thread.title || (
                         <span className="text-gray-400 ">(No title)</span>
                       )}
