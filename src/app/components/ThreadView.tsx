@@ -29,7 +29,7 @@ export default function ThreadView(props: { threadId: string }) {
 
   return (
     <div
-      className="flex-1 overflow-y-auto p-4"
+      className="flex-1 overflow-y-auto p-2 md:p-4"
       ref={scrollRef}
       style={{ minHeight: 0 }}
     >

@@ -18,6 +18,7 @@ import ThreadView from "./components/ThreadView";
 import { optimisticallySendMessage } from "@convex-dev/agent/react";
 import { PlusIcon } from "@radix-ui/react-icons";
 import { z } from "zod";
+import { useThreadsState } from "./components/use-threads-state";
 
 const modelNames = z.enum(["gpt-4.1-mini", "gpt-4.1", "gpt-4o"]);
 type ModelName = z.infer<typeof modelNames>;
@@ -52,7 +53,7 @@ export default function HomePage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const convex = useConvex();
-
+  const { showThreadsPanel, setShowThreadsPanel } = useThreadsState();
   const [modelName, setModelName] = useState<ModelName>("gpt-4.1-mini");
   const afterDelete = async (threadId: string) => {
     if (selectedThread === threadId) {
@@ -99,84 +100,89 @@ export default function HomePage() {
     <Theme>
       <div className="w-full h-[calc(100vh-3rem)] flex bg-gray-50">
         {/* Left Sidebar */}
-        <div className="w-80 border-r border-gray-200 p-4 flex flex-col">
-          <div className="flex items-center  mb-3 gap-4 ml-3 mr-1">
-            <Heading size="3">Threads</Heading>
-            <div className="grow"></div>
-            <ModelSelect value={modelName} onChange={setModelName} />
-            <IconButton
-              onClick={() => {
-                setSelectedThread(null);
-                // setMessages([]);
-              }}
-              variant="surface"
-              size="2"
-            >
-              <PlusIcon />
-            </IconButton>
-          </div>
-          <div className="flex-1 overflow-y-auto">
-            {!threads && (
-              <Text className="p-4 text-gray-400">Loading threads...</Text>
-            )}
-            {threads && threads.page.length === 0 && (
-              <Text className="p-4 text-gray-400">No threads yet.</Text>
-            )}
-            {threads &&
-              threads.page.map((thread) => (
-                <div
-                  key={thread._id}
-                  onClick={() => setSelectedThread(thread._id)}
-                  className={`p-3 gap-2 mb-2 rounded cursor-pointer flex items-center justify-between transition-colors ${
-                    selectedThread === thread._id
-                      ? "bg-blue-50 border border-blue-400 "
-                      : "hover:bg-gray-100 border border-transparent"
-                  }`}
-                >
+        {showThreadsPanel && (
+          <div className="w-80 border-r border-gray-200 p-4 flex flex-col">
+            <div className="flex items-center  mb-3 gap-4 ml-3 mr-1">
+              <Heading size="3">Threads</Heading>
+              <div className="grow"></div>
+              <ModelSelect value={modelName} onChange={setModelName} />
+              <IconButton
+                onClick={() => {
+                  setSelectedThread(null);
+                  // setMessages([]);
+                }}
+                variant="surface"
+                size="2"
+              >
+                <PlusIcon />
+              </IconButton>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              {!threads && (
+                <Text className="p-4 text-gray-400">Loading threads...</Text>
+              )}
+              {threads && threads.page.length === 0 && (
+                <Text className="p-4 text-gray-400">No threads yet.</Text>
+              )}
+              {threads &&
+                threads.page.map((thread) => (
                   <div
-                    className="truncate flex-1 min-w-0"
-                    title={thread.title || thread._id}
+                    key={thread._id}
+                    onClick={() => setSelectedThread(thread._id)}
+                    className={`p-3 gap-2 mb-2 rounded cursor-pointer flex items-center justify-between transition-colors ${
+                      selectedThread === thread._id
+                        ? "bg-blue-50 border border-blue-400 "
+                        : "hover:bg-gray-100 border border-transparent"
+                    }`}
                   >
-                    <Text as="div" size="2">
-                      {thread.title || (
-                        <span className="text-gray-400 ">(No title)</span>
-                      )}
-                    </Text>
+                    <div
+                      className="truncate flex-1 min-w-0"
+                      title={thread.title || thread._id}
+                    >
+                      <Text as="div" size="2">
+                        {thread.title || (
+                          <span className="text-gray-400 ">(No title)</span>
+                        )}
+                      </Text>
+                    </div>
+                    <DeleteThreadButton
+                      threadId={thread._id}
+                      afterDelete={() => afterDelete(thread._id)}
+                    />
                   </div>
-                  <DeleteThreadButton
-                    threadId={thread._id}
-                    afterDelete={() => afterDelete(thread._id)}
-                  />
-                </div>
-              ))}
+                ))}
+            </div>
           </div>
-        </div>
+        )}
         {/* Right Chat Panel */}
         <div className="flex-1 flex flex-col min-w-0">
-          <div className="flex-1 flex flex-col p-6 min-h-0">
+          <div className="flex-1 flex flex-col p-2 md:p-6 min-h-0">
             <div className="flex-1 flex flex-col min-h-0">
               <div className="flex-1 flex flex-col min-h-0 rounded-lg  border-gray-300 border">
                 {selectedThread ? (
                   <ThreadView threadId={selectedThread} />
                 ) : (
-                  <Text color="gray" className="m-4">
+                  <Text color="gray" className="p-4">
                     Select a thread to start a conversation
                   </Text>
                 )}
               </div>
             </div>
-            <form onSubmit={handleSend} className="mt-4 flex gap-3">
+            <form
+              onSubmit={handleSend}
+              className="mt-2 md:mt-4 flex gap-2 md:gap-3"
+            >
               <TextField.Root
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Type your message..."
                 className="flex-1"
-                size="3"
+                size={{ initial: "2", md: "3" }}
                 disabled={loading}
               />
               <Button
                 type="submit"
-                size="3"
+                size={{ initial: "2", md: "3" }}
                 disabled={loading || !input.trim()}
               >
                 Send
