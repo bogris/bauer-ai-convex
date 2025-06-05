@@ -21,3 +21,4 @@ export const testArticleMigrationsTypeOne = migrations.define({
 export const doArticles = migrations.runner(
   internal.migrations.testArticleMigrationsTypeOne
 );
+

@@ -11,6 +11,7 @@ const navLinks = [
   { href: "/", label: "Chat" },
   { href: "/articles", label: "Articles" },
   { href: "/vector-search", label: "Search" },
+  { href: "/image-block-service", label: "Image Block Service" },
 ];
 
 export default function Navbar() {

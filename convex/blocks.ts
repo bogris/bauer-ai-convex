@@ -121,6 +121,7 @@ export const enrichImageBlocks = action({
     articleId: v.optional(v.id("articles")),
     allBlocks: v.optional(v.boolean()),
     limit: v.optional(v.number()),
+    override: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     let blocks: DataModel["blocks"]["document"][] = [];
@@ -157,26 +158,45 @@ export const enrichImageBlocks = action({
         );
         if (!imageBlockContext)
           throw new Error("Image block context not found");
-        const aiSummaryResponse = await ctx.runAction(
-          api.enrichImage.analyzeImageWithContext,
-          {
-            articleTitle: imageBlockContext.articleTitle,
-            imageUrl: imageBlock.src,
-            context: imageBlockContext.previousTexts.join("\n"),
-          }
-        );
-        const aiSummary = aiSummaryResponse.summary;
-        if (!aiSummary) throw new Error("AI summary not found");
-        await ctx.runMutation(api.blocks.addAiSummary, {
-          blockId: imageBlock._id,
-          aiSummary,
-        });
+        if (!args.override && imageBlock.aiSummary) {
+          console.log(`block ${imageBlock._id} already has ai summary`);
+          continue;
+        }
+        try {
+          const aiSummaryResponse = await ctx.runAction(
+            api.enrichImage.analyzeImageWithContext,
+            {
+              articleTitle: imageBlockContext.articleTitle,
+              imageUrl: imageBlock.src,
+              context: imageBlockContext.previousTexts.join("\n"),
+            }
+          );
+          const aiSummary = aiSummaryResponse.summary;
+          if (!aiSummary) throw new Error("AI summary not found");
+          await ctx.runMutation(api.blocks.addAiSummary, {
+            blockId: imageBlock._id,
+            aiSummary,
+          });
+        } catch (error) {
+          console.error(
+            `Error enriching image block ${imageBlock._id}:`,
+            error
+          );
+        }
       }
     }
   },
 });
 
-
+export const listImageBlocks = query({
+  handler: async (ctx) => {
+    const blocks = await ctx.db
+      .query("blocks")
+      .withIndex("by_type", (q) => q.eq("type", "image"))
+      .collect();
+    return blocks;
+  },
+});
 
 export const generateEmbeddingsForArticleBlocks = action({
   args: {
@@ -190,28 +210,35 @@ export const generateEmbeddingsForArticleBlocks = action({
     // For each block, generate an embedding and patch the block
     await Promise.all(
       blocks.map(async (block) => {
-        const { embed } = await import("ai");
-        const { openai } = await import("@ai-sdk/openai");
-        let textForEmbedding = "";
-        if (block.type === "header" || block.type === "text") {
-          textForEmbedding = block.text ?? "";
-        } else if (block.type === "list") {
-          textForEmbedding = (block.items ?? []).join("\n");
-        } else if (block.type === "code") {
-          textForEmbedding = block.code ?? "";
-        } else if (block.type === "image") {
-          textForEmbedding = block.aiSummary ?? "";
+        try {
+          const { embed } = await import("ai");
+          const { openai } = await import("@ai-sdk/openai");
+          let textForEmbedding = "";
+          if (block.type === "header" || block.type === "text") {
+            textForEmbedding = block.text ?? "";
+          } else if (block.type === "list") {
+            textForEmbedding = (block.items ?? []).join("\n");
+          } else if (block.type === "code") {
+            textForEmbedding = block.code ?? "";
+          } else if (block.type === "image") {
+            textForEmbedding = block.aiSummary ?? "";
+          }
+          if (textForEmbedding === "") return;
+          const embeddingResponse = await embed({
+            model: openai.embedding("text-embedding-3-small"),
+            value: textForEmbedding,
+          });
+          // Patch the block with the embedding using the mutation
+          await ctx.runMutation(api.embeddings.upsertBlockEmbedding, {
+            blockId: block._id,
+            embedding: embeddingResponse.embedding,
+          });
+        } catch (error) {
+          console.error(
+            `Error generating embedding for block ${block._id}:`,
+            error
+          );
         }
-        if (textForEmbedding === "") return;
-        const embeddingResponse = await embed({
-          model: openai.embedding("text-embedding-3-small"),
-          value: textForEmbedding,
-        });
-        // Patch the block with the embedding using the mutation
-        await ctx.runMutation(api.embeddings.upsertBlockEmbedding, {
-          blockId: block._id,
-          embedding: embeddingResponse.embedding,
-        });
       })
     );
   },
