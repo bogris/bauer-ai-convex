@@ -98,7 +98,7 @@ export default function HomePage() {
 
   return (
     <Theme>
-      <div className="w-full h-[calc(100vh-3rem)] flex bg-gray-50">
+      <div className="w-full h-[calc(100dvh-3rem)] flex bg-gray-50 overflow-x-hidden">
         {/* Left Sidebar */}
         {showThreadsPanel && (
           <div className="w-80 border-r border-gray-200 p-4 flex flex-col">
@@ -170,13 +170,13 @@ export default function HomePage() {
             </div>
             <form
               onSubmit={handleSend}
-              className="mt-2 md:mt-4 flex gap-2 md:gap-3"
+              className="mt-2 md:mt-4 flex gap-2 md:gap-3 w-full max-w-full"
             >
               <TextField.Root
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Type your message..."
-                className="flex-1"
+                className="flex-1 min-w-0 max-w-full"
                 size={{ initial: "2", md: "3" }}
                 disabled={loading}
               />
@@ -184,6 +184,7 @@ export default function HomePage() {
                 type="submit"
                 size={{ initial: "2", md: "3" }}
                 disabled={loading || !input.trim()}
+                className="max-w-[40vw] sm:max-w-[200px] truncate"
               >
                 Send
               </Button>
