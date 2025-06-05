@@ -1,7 +1,7 @@
 /** @format */
 
 import { v } from "convex/values";
-import { mutation } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 
 export const upsertBlockEmbedding = mutation({
   args: v.object({
@@ -22,6 +22,18 @@ export const upsertBlockEmbedding = mutation({
       blockId: args.blockId,
     });
     return newId;
+  },
+});
+
+export const getBlockEmbedding = query({
+  args: {
+    id: v.id("blocks"),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("embeddings")
+      .withIndex("by_block_id", (q) => q.eq("blockId", args.id))
+      .first();
   },
 });
 

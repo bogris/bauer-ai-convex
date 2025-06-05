@@ -1,5 +1,3 @@
-/** @format */
-
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
@@ -33,11 +31,14 @@ export default defineSchema({
         embedding: v.array(v.float64()),
       })
     )
-  ).vectorIndex("by_embedding", {
-    vectorField: "embedding",
-    filterFields: ["type"],
-    dimensions: 1536,
-  }),
+  )
+    .vectorIndex("by_embedding", {
+      vectorField: "embedding",
+      filterFields: ["type"],
+      dimensions: 1536,
+    })
+    .index("by_block_id", ["blockId"]),
+
   blocks: defineTable(
     v.union(
       v.object({

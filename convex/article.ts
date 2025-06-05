@@ -48,3 +48,10 @@ export const getArticleWithBlocks = query({
     };
   },
 });
+
+export const listAllArticles = query({
+  handler: async (ctx) => {
+    const articles = await ctx.db.query("articles").collect();
+    return articles;
+  },
+});

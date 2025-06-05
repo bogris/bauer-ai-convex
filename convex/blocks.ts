@@ -198,9 +198,11 @@ export const listImageBlocks = query({
   },
 });
 
+
 export const generateEmbeddingsForArticleBlocks = action({
   args: {
     articleId: v.id("articles"),
+    override: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     // Fetch all blocks for the article
@@ -211,6 +213,16 @@ export const generateEmbeddingsForArticleBlocks = action({
     await Promise.all(
       blocks.map(async (block) => {
         try {
+          const existingEmbedding = (await ctx.runQuery(
+            api.embeddings.getBlockEmbedding,
+            {
+              id: block._id,
+            }
+          )) as Doc<"embeddings"> | null;
+          if (existingEmbedding && !args.override) {
+            console.log(`block ${block._id} already has embedding`);
+            return;
+          }
           const { embed } = await import("ai");
           const { openai } = await import("@ai-sdk/openai");
           let textForEmbedding = "";
