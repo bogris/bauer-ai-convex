@@ -53,7 +53,7 @@ export default function HomePage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const convex = useConvex();
-  const { showThreadsPanel, setShowThreadsPanel } = useThreadsState();
+  const { showThreadsPanel } = useThreadsState();
   const [modelName, setModelName] = useState<ModelName>("gpt-4.1-mini");
   const afterDelete = async (threadId: string) => {
     if (selectedThread === threadId) {
