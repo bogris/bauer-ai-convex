@@ -1,13 +1,37 @@
 "use client";
 
 import "@radix-ui/themes/styles.css";
-import { Theme, Text, TextField, Button } from "@radix-ui/themes";
+import {
+  Theme,
+  Text,
+  TextField,
+  Button,
+  IconButton,
+  Select,
+  Heading,
+} from "@radix-ui/themes";
 import { useState } from "react";
 import { useConvex, useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import DeleteThreadButton from "./components/DeleteThread";
 import ThreadView from "./components/ThreadView";
 import { optimisticallySendMessage } from "@convex-dev/agent/react";
+import { PlusIcon } from "@radix-ui/react-icons";
+
+const ModelSelect = (props: {
+  onChange: (modelName: "gpt-4.1-mini" | "gpt-4.1") => void;
+  value: "gpt-4.1-mini" | "gpt-4.1";
+}) => {
+  return (
+    <Select.Root value={props.value} onValueChange={props.onChange}>
+      <Select.Trigger variant="ghost" />
+      <Select.Content>
+        <Select.Item value="gpt-4.1-mini">mini GPT</Select.Item>
+        <Select.Item value="gpt-4.1">... GPT</Select.Item>
+      </Select.Content>
+    </Select.Root>
+  );
+};
 
 export default function HomePage() {
   const threads = useQuery(api.agentActions.listThreads);
@@ -16,6 +40,9 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false);
   const convex = useConvex();
 
+  const [modelName, setModelName] = useState<"gpt-4.1-mini" | "gpt-4.1">(
+    "gpt-4.1-mini"
+  );
   const afterDelete = async (threadId: string) => {
     if (selectedThread === threadId) {
       setSelectedThread(null);
@@ -50,6 +77,7 @@ export default function HomePage() {
     sendMessage({
       message: input,
       threadId: resolvedThreadId,
+      modelName,
     });
 
     setInput("");
@@ -61,9 +89,11 @@ export default function HomePage() {
       <div className="w-full h-[calc(100vh-3rem)] flex bg-gray-50">
         {/* Left Sidebar */}
         <div className="w-80 border-r border-gray-200 p-4 flex flex-col">
-          <div className="flex items-center justify-between mb-3">
-            <span className="font-bold text-lg">Threads</span>
-            <Button
+          <div className="flex items-center  mb-3 gap-4 ml-3 mr-1">
+            <Heading size="3">Threads</Heading>
+            <div className="grow"></div>
+            <ModelSelect value={modelName} onChange={setModelName} />
+            <IconButton
               onClick={() => {
                 setSelectedThread(null);
                 // setMessages([]);
@@ -71,8 +101,8 @@ export default function HomePage() {
               variant="surface"
               size="2"
             >
-              + New Chat
-            </Button>
+              <PlusIcon />
+            </IconButton>
           </div>
           <div className="flex-1 overflow-y-auto">
             {!threads && (

@@ -147,9 +147,13 @@ export const sendMessageToThreadFromUser = mutation({
   args: {
     message: v.string(),
     threadId: v.string(),
+    modelName: v.optional(
+      v.union(v.literal("gpt-4.1-mini"), v.literal("gpt-4.1"))
+    ),
     // userId: v.id("users"),
   },
   handler: async (ctx, args) => {
+    const modelName = args.modelName ?? "gpt-4.1-mini";
     // Make sure the user can send a message to this thread
     await getAndValidateThread(ctx, {
       threadId: args.threadId,
@@ -172,24 +176,30 @@ export const sendMessageToThreadFromUser = mutation({
     await ctx.scheduler.runAfter(0, internal.agentActions.streamResponse, {
       threadId: args.threadId,
       promptMessageId: messageId,
+      modelName,
     });
   },
 });
 
 export const streamResponse = internalAction({
-  args: { promptMessageId: v.string(), threadId: v.string() },
-  handler: async (ctx, { promptMessageId, threadId }) => {
+  args: {
+    promptMessageId: v.string(),
+    threadId: v.string(),
+    modelName: v.union(v.literal("gpt-4.1-mini"), v.literal("gpt-4.1")),
+  },
+  handler: async (ctx, { promptMessageId, threadId, modelName }) => {
     // Generate the embeddings for the message from the user, this shouldnt be
     // needed in the future
     // await supportAgent.generateAndSaveEmbeddings(ctx, {
     //   messageIds: [promptMessageId],
     // });
-
+    console.log(`modelName`, modelName);
+    const model = openai.chat(modelName);
     // Start streaming the reponse by line into the database
     const result = await supportAgent.streamText(
       ctx,
       { threadId },
-      { promptMessageId },
+      { promptMessageId, model },
       {
         saveStreamDeltas: {
           chunking: "line",
