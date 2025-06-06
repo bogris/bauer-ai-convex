@@ -12,7 +12,7 @@ import {
   SignInButton,
 } from "@clerk/nextjs";
 import Navbar from "./components/Navbar";
-import { Theme } from "@radix-ui/themes";
+import { Button, Theme } from "@radix-ui/themes";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,7 +29,6 @@ export const metadata: Metadata = {
   description: "Bauer Assist",
   manifest: "/manifest.json",
   icons: [
-    { rel: "icon", url: "/favicon.ico" },
     {
       rel: "icon",
       type: "image/png",
@@ -79,7 +78,9 @@ export default function RootLayout({
                     <p className="mb-4 text-lg text-gray-600">
                       Please sign in to access the app features.
                     </p>
-                    <SignInButton />
+                    <SignInButton>
+                      <Button color="sky">Sign in</Button>
+                    </SignInButton>
                   </div>
                 </SignedOut>
               </main>
